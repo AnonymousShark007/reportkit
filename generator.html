@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Report — ReportKit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #1E293B; --blue: #2563EB; --blue-light: #DBEAFE;
+      --green: #10B981; --bg: #F8FAFC; --text: #334155;
+      --muted: #64748B; --border: #E2E8F0; --white: #FFFFFF;
+      --red: #EF4444; --red-light: #FEF2F2;
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    nav {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { font-weight: 800; font-size: 1.2rem; color: var(--navy); text-decoration: none; }
+    .logo span { color: var(--blue); }
+    .free-badge {
+      background: var(--blue-light); color: var(--blue);
+      font-size: 0.78rem; font-weight: 600;
+      padding: 4px 12px; border-radius: 100px;
+    }
+
+    .container { max-width: 700px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    h1 { font-size: 1.7rem; font-weight: 800; color: var(--navy); margin-bottom: 6px; letter-spacing: -0.5px; }
+    .sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 32px; }
+
+    .error-box {
+      background: var(--red-light); border: 1px solid #FECACA;
+      color: var(--red); border-radius: 8px; padding: 12px 16px;
+      font-size: 0.875rem; margin-bottom: 24px;
+    }
+
+    form { display: flex; flex-direction: column; gap: 0; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 540px) { .form-row { grid-template-columns: 1fr; } }
+
+    .field { margin-bottom: 20px; }
+    label {
+      display: block; font-size: 0.875rem; font-weight: 600;
+      color: var(--navy); margin-bottom: 6px;
+    }
+    label .req { color: var(--blue); }
+    label .hint { color: var(--muted); font-weight: 400; }
+
+    input[type="text"], textarea {
+      width: 100%; padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: 0.9rem;
+      font-family: inherit; color: var(--text);
+      background: var(--white); transition: border-color 0.15s;
+      resize: vertical;
+    }
+    input[type="text"]:focus, textarea:focus {
+      outline: none; border-color: var(--blue);
+      box-shadow: 0 0 0 3px var(--blue-light);
+    }
+    textarea { min-height: 90px; line-height: 1.5; }
+
+    .divider {
+      border: none; border-top: 1px solid var(--border);
+      margin: 8px 0 24px;
+    }
+
+    .section-heading {
+      font-size: 0.75rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.8px;
+      margin-bottom: 16px;
+    }
+
+    .submit-area { margin-top: 8px; }
+    .btn-submit {
+      background: var(--blue); color: var(--white);
+      border: none; border-radius: 10px;
+      padding: 14px 36px; font-size: 1rem; font-weight: 700;
+      cursor: pointer; width: 100%;
+      transition: opacity 0.15s, transform 0.1s;
+      position: relative;
+    }
+    .btn-submit:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .submit-note { font-size: 0.8rem; color: var(--muted); text-align: center; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/">Report<span>Kit</span></a>
+  <div class="free-badge">First report free</div>
+</nav>
+
+<div class="container">
+  <h1>Create your report</h1>
+  <p class="sub">Fill in the details below — rough notes are fine, AI will handle the polish.</p>
+
+  {% if error %}
+  <div class="error-box">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST" action="/generate" id="reportForm">
+
+    <div class="section-heading">About this report</div>
+    <div class="form-row">
+      <div class="field">
+        <label>Client name <span class="req">*</span></label>
+        <input type="text" name="client_name" placeholder="e.g. Acme Corp" required
+          value="{{ prefill.client_name if prefill else '' }}" />
+      </div>
+      <div class="field">
+        <label>Reporting period <span class="req">*</span></label>
+        <input type="text" name="period" placeholder="e.g. September 2026" required
+          value="{{ prefill.period if prefill else '' }}" />
+      </div>
+    </div>
+    <div class="field">
+      <label>Your name / studio <span class="req">*</span></label>
+      <input type="text" name="your_name" placeholder="e.g. Alex Design Studio" required
+        value="{{ prefill.your_name if prefill else '' }}" />
+    </div>
+
+    <hr class="divider" />
+    <div class="section-heading">What happened this period</div>
+
+    <div class="field">
+      <label>Work completed <span class="req">*</span> <span class="hint">— bullet points are fine</span></label>
+      <textarea name="work_done" placeholder="Redesigned homepage, fixed checkout bug, updated 12 product pages, integrated Stripe..." required>{{ prefill.work_done if prefill else '' }}</textarea>
+    </div>
+
+    <div class="field">
+      <label>Key metrics &amp; results <span class="req">*</span> <span class="hint">— numbers if you have them</span></label>
+      <textarea name="metrics" placeholder="Load time down 40%, 12 pages shipped, 3 client-reported bugs fixed, +18% checkout conversion..." required>{{ prefill.metrics if prefill else '' }}</textarea>
+    </div>
+
+    <div class="field">
+      <label>Wins &amp; highlights <span class="req">*</span></label>
+      <textarea name="wins" placeholder="Client approved final brand colors, delivered 2 days early, positive feedback on mobile design..." required>{{ prefill.wins if prefill else '' }}</textarea>
+    </div>
+
+    <div class="field">
+      <label>Challenges or blockers <span class="hint">— optional</span></label>
+      <textarea name="challenges" placeholder="Waiting on client feedback for the contact form copy, server migration delayed by hosting provider..." style="min-height:70px;">{{ prefill.challenges if prefill else '' }}</textarea>
+    </div>
+
+    <div class="field">
+      <label>Next steps <span class="req">*</span></label>
+      <textarea name="next_steps" placeholder="Complete mobile responsive pass, begin SEO audit, schedule review call week of Oct 7..." required>{{ prefill.next_steps if prefill else '' }}</textarea>
+    </div>
+
+    <div class="submit-area">
+      <button type="submit" class="btn-submit" id="submitBtn">
+        Generate Report →
+      </button>
+      <p class="submit-note">Takes about 10–15 seconds. Powered by Claude AI.</p>
+    </div>
+
+  </form>
+</div>
+
+<script>
+  document.getElementById('reportForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Generating your report…';
+  });
+</script>
+</body>
+</html>

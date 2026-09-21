@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Report — ReportKit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #1E293B; --blue: #2563EB; --blue-light: #DBEAFE;
+      --green: #10B981; --green-light: #D1FAE5;
+      --bg: #F8FAFC; --text: #334155; --muted: #64748B;
+      --border: #E2E8F0; --white: #FFFFFF;
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+
+    nav {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { font-weight: 800; font-size: 1.2rem; color: var(--navy); text-decoration: none; }
+    .logo span { color: var(--blue); }
+
+    .toolbar {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    }
+    .toolbar-title { font-weight: 600; font-size: 0.9rem; color: var(--navy); margin-right: auto; }
+    .btn {
+      border: none; border-radius: 8px; padding: 9px 18px;
+      font-size: 0.875rem; font-weight: 600; cursor: pointer;
+      transition: opacity 0.15s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--blue); color: var(--white); }
+    .btn-outline { background: var(--white); color: var(--text); border: 1.5px solid var(--border); }
+    .btn-green { background: var(--green); color: var(--white); }
+    .btn:hover { opacity: 0.85; }
+
+    {% if not paid %}
+    .upsell-bar {
+      background: linear-gradient(90deg, #1E40AF, #2563EB);
+      color: var(--white);
+      padding: 10px 24px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      font-size: 0.875rem;
+    }
+    .upsell-bar strong { font-weight: 700; }
+    .upsell-bar a {
+      background: var(--white); color: var(--blue);
+      border-radius: 6px; padding: 6px 14px;
+      font-weight: 700; font-size: 0.82rem; text-decoration: none;
+      white-space: nowrap;
+    }
+    .upsell-bar a:hover { opacity: 0.9; }
+    {% endif %}
+
+    .report-wrap {
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 0 24px 80px;
+    }
+    .report-frame {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+    .report-content {
+      padding: 0;
+    }
+    .report-content iframe {
+      width: 100%;
+      border: none;
+      min-height: 700px;
+      display: block;
+    }
+
+    @media print {
+      nav, .toolbar, .upsell-bar, .report-wrap > *:not(.report-frame) { display: none !important; }
+      .report-frame { box-shadow: none; border: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/">Report<span>Kit</span></a>
+</nav>
+
+<div class="toolbar">
+  <span class="toolbar-title">Report for {{ client_name }} — ready</span>
+  <button class="btn btn-outline" onclick="copyHtml()">Copy HTML</button>
+  <button class="btn btn-outline" onclick="window.print()">Print / Save PDF</button>
+  <a class="btn btn-primary" href="/download-pdf">Download HTML file</a>
+  <a class="btn btn-outline" href="/generate">New report</a>
+</div>
+
+{% if not paid %}
+<div class="upsell-bar">
+  <span>✓ Free report used. <strong>Generate unlimited reports for $1.99 each or $12/month.</strong></span>
+  <a href="/checkout">Get more reports →</a>
+</div>
+{% endif %}
+
+<div class="report-wrap">
+  <div class="report-frame">
+    <div class="report-content">
+      <iframe id="reportFrame" srcdoc="{{ report_html | e }}" sandbox="allow-same-origin allow-scripts"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Auto-resize iframe to content height
+  const frame = document.getElementById('reportFrame');
+  frame.addEventListener('load', function() {
+    try {
+      const h = frame.contentDocument.documentElement.scrollHeight;
+      frame.style.height = (h + 32) + 'px';
+    } catch(e) {
+      frame.style.height = '800px';
+    }
+  });
+
+  function copyHtml() {
+    const html = frame.srcdoc || document.getElementById('reportFrame').getAttribute('srcdoc');
+    navigator.clipboard.writeText(html).then(() => {
+      const btn = event.target;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy HTML', 2000);
+    });
+  }
+</script>
+
+</body>
+</html>
